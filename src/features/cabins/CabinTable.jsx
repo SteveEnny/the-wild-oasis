@@ -38,7 +38,7 @@ function CabinTable() {
     queryFn: getCabins, // this funtion returns a promise
   });
 
-  // console.log(x);
+  console.log(cabins);
   if (isLoading) return <Spinner />;
   return (
     <Table role="table">

@@ -16,7 +16,7 @@ function CreateCabinForm() {
   const { errors } = formState;
   console.log(errors);
   const queryClient = useQueryClient();
-
+  // create cabin ill accept a data
   const { mutate, isLoading: isCreating } = useMutation({
     mutationFn: createCabin,
     onSuccess: () => {
@@ -30,7 +30,8 @@ function CreateCabinForm() {
   });
   // the form gets all the data form the input and send them to the api using the create cabin
   function onSubmit(data) {
-    mutate(data);
+    console.log(data.image[0].name);
+    mutate({ ...data, image: data.image[0] });
   }
   function onError(error) {
     console.log(error);
@@ -98,7 +99,11 @@ function CreateCabinForm() {
       </FormRow>
 
       <FormRow label="Cabin photo" error={errors?.image?.message}>
-        <FileInput id="image" accept="image/*" />
+        <FileInput
+          id="image"
+          accept="image/*"
+          {...register("image", { required: "This field is required" })}
+        />
       </FormRow>
 
       <FormRow>
