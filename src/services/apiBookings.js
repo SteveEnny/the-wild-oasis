@@ -1,5 +1,44 @@
+import { PAGE_SIZE } from "../utils/constants";
 import { getToday } from "../utils/helpers";
 import supabase from "./supabase";
+
+export async function getBookings({ filter, sortBy, page }) {
+  let query = supabase
+    .from("bookings")
+    .select(
+      "id, created_at, startDate, endDate,numNights, numGuests, status, totalPrice, cabins(name), guests(fullName, email)",
+      { count: "exact" }
+    );
+
+  // Filter
+  // if (filter !== null) query.eq(filter.field, filter.value);
+  if (filter) {
+    console.log(query);
+    // query = query[filter.method || "eq"](filter.field, filter.value);
+    query = query.eq(filter.field, filter.value);
+  }
+
+  //SORT
+  if (sortBy.field) {
+    query = query.order(sortBy.field, {
+      ascending: sortBy.direction === "asc",
+    });
+  }
+
+  if (page) {
+    const from = (page - 1) * PAGE_SIZE;
+    const to = PAGE_SIZE * page - 1;
+    query = query.range(from, to);
+  }
+
+  const { data, error, count } = await query;
+
+  if (error) {
+    console.error("Bookings could not load");
+    throw new Error("Bookings could not be loaded");
+  }
+  return { data, count };
+}
 
 export async function getBooking(id) {
   const { data, error } = await supabase
@@ -7,11 +46,12 @@ export async function getBooking(id) {
     .select("*, cabins(*), guests(*)")
     .eq("id", id)
     .single();
-
   if (error) {
     console.error(error);
     throw new Error("Booking not found");
   }
+
+  // console.log(data);
 
   return data;
 }
@@ -82,12 +122,18 @@ export async function updateBooking(id, obj) {
     console.error(error);
     throw new Error("Booking could not be updated");
   }
+  console.log(data);
   return data;
 }
 
 export async function deleteBooking(id) {
   // REMEMBER RLS POLICIES
-  const { data, error } = await supabase.from("bookings").delete().eq("id", id);
+  const { data, error } = await supabase
+    .from("bookings")
+    .delete()
+    .eq("id", id)
+    .select()
+    .single();
 
   if (error) {
     console.error(error);
